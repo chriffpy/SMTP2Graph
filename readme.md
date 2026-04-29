@@ -1,4 +1,14 @@
-# SMTP2Graph
+# SMTP2Graph (Sharpflix fork)
+
+> **This is a patched fork of [SMTP2Graph/SMTP2Graph](https://github.com/SMTP2Graph/SMTP2Graph)**, maintained by **Sharpflix GmbH** (Solingen, Germany), with three production-reliability fixes for Linux bulk-mail relay:
+>
+> 1. **EML filename uniqueness** — guarantees the on-disk filename stays unique even when two SMTP sessions are issued the same `session.id` within a millisecond (otherwise the second message overwrites the first and is silently lost under concurrent bulk sends).
+> 2. **Reverts upstream PR #52** — the EML writeStream handler is back on `'finish'` instead of `'close'`. On Linux + production webpack build, `'close'` does not fire reliably and every received message was dropped before reaching the queue. **This fork is Linux-only**; Windows users should use upstream.
+> 3. **Always-on verbose mailer logs** — adds `log()` calls in `Mailer` around the send pipeline (`Preparing to send mail …`, `Sending message as …`, `Message sent successfully …`, etc.) and hardcodes the build-time `DEBUG` flag to `true` so production bundles stay at log level `verbose`. Required for any external log-based monitoring.
+>
+> Tags follow the pattern `v<upstream>-bsg.<n>` — current tag is `v1.1.4-bsg.2`. The Docker image built from this source is published as [`ghcr.io/chriffpy/better-smtp2graph`](https://github.com/chriffpy/better-smtp2graph). All changes are GPL-3.0, inherited from upstream.
+>
+> ---
 
 > SMTP2Graph is a robust, versatile and lightweight multiplatform application that will run an SMTP server which relays messages over Microsoft 365/Exchange Online using the Microsoft Graph API.
 

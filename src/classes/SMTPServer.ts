@@ -155,10 +155,15 @@ export class SMTPServer
         (mailCompile as any).keepBcc = true;
         mailCompile.createReadStream().pipe(splitter).pipe(new Joiner()).pipe(writeStream);
 
-        // Windows can keep a handle open for a short time even after 'finish' fires.
-        // the rename that occurs in MailQueue.add must wait until the underlying
-        // file descriptor is closed, which is signalled by the 'close' event.
-        writeStream.on('close', () => {
+        // PR #52 ("Fix: File Rename Issue") moved this handler from 'finish' to
+        // 'close' for Windows file-lock reasons.  In our environment (Linux,
+        // production webpack build) the 'close' event was not firing reliably,
+        // causing every received message to be silently dropped before it
+        // reached the queue.  Reverting to 'finish' restores reliable delivery
+        // on Linux.  Windows users who need the file-lock workaround should
+        // patch this back to 'close' (and accept the trade-off).
+        writeStream.on('finish', () => {
+            log('verbose', 'EML write finished');
             if(stream.sizeExceeded)
             {
                 const err = new Error('Message exceeds fixed maximum message size');
@@ -176,12 +181,6 @@ export class SMTPServer
                 callback();
                 this.#queue.add(tmpFile);
             }
-        });
-
-        // ensure the stream is ended when the mail compiles (pipe will do this for us,
-        // but explictly listening for 'finish' lets us log/debug if needed)
-        writeStream.on('finish', ()=>{
-            log('verbose', 'EML write finished, waiting for close');
         });
     };
     

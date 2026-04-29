@@ -25,7 +25,7 @@ module.exports = (env, argv) => ({
     plugins: [
         new webpack.DefinePlugin({
             VERSION: JSON.stringify(require("./package.json").version),
-            DEBUG: (argv.mode!=='production'),
+            DEBUG: true, // bsg: always emit verbose-level logs
         }),
     ],
     devtool: argv.mode==='production'?undefined:'inline-source-map',

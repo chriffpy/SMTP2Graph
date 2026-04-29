@@ -142,8 +142,14 @@ export class SMTPServer
             }
         });
 
-        // Create the EML file
-        const tmpFile = path.join(this.#queue.tempPath, `${session.id}.eml`);
+        // Create the EML file.
+        // The session.id alone is not unique enough under concurrent bulk
+        // sends — two near-simultaneous sessions can produce identical ids
+        // and the second EML would overwrite the first before the mailer
+        // picks it up.  Append a millisecond timestamp and a short random
+        // suffix to guarantee uniqueness.
+        const uniqSuffix = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+        const tmpFile = path.join(this.#queue.tempPath, `${session.id}-${uniqSuffix}.eml`);
         const writeStream = fs.createWriteStream(tmpFile);
         const mailCompile = mail.compile();
         (mailCompile as any).keepBcc = true;

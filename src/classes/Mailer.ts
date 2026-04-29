@@ -8,6 +8,9 @@ import { ConfidentialClientApplication } from '@azure/msal-node';
 import { Config } from './Config';
 import { UnrecoverableError } from './Constants';
 import { MsalProxy } from './MsalProxy';
+import { prefixedLog } from './Logger';
+
+const log = prefixedLog('Mailer');
 
 export class MailboxAccessDenied extends UnrecoverableError { }
 export class InvalidMailContent extends UnrecoverableError { }
@@ -36,21 +39,29 @@ export class Mailer
     static async sendEml(filePath: string)
     {
         return this.#sendSemaphore.runExclusive(async ()=>{
+            log('verbose', `Preparing to send mail from file "${filePath}"`);
+
             // Determine the sender
             let sender = Config.forceMailbox;
-            if(!sender) // There's no forced sender in the config, so we get it from the mail data
+            if(sender)
+            {
+                log('verbose', `Using forced sender "${sender}" from config`);
+            }
+            else // There's no forced sender in the config, so we get it from the mail data
             {
                 const senderObj = await this.#findSender(filePath);
                 if(!senderObj) throw new UnrecoverableError('No sender/from address defined');
                 sender = senderObj.address;
+                log('verbose', `Using sender "${sender}" from message`);
             }
-
-            // Fetch an accesstoken if needed
-            const token = await this.#aquireToken();
 
             // Send the message
             const readStream = fs.createReadStream(filePath);
             try {
+                // Fetch an accesstoken if needed
+                const token = await this.#aquireToken();
+
+                log('verbose', `Sending message as "${sender}" via Microsoft Graph`);
                 await this.#retryableRequest({
                     method: 'post',
                     url: `https://graph.microsoft.com/v1.0/users/${sender}/sendMail`,
@@ -62,7 +73,9 @@ export class Mailer
                     },
                     proxy: Config.httpProxyConfig,
                 });
+                log('verbose', `Message sent successfully as "${sender}"`);
             } catch(error: any) {
+                log('error', `Failed to send message as "${sender}"`, {error});
                 if(isAxiosError(error) && error.response?.data)
                 {
                     const data = error.response?.data;
@@ -174,9 +187,11 @@ export class Mailer
         return this.#aquireTokenMutex.runExclusive(async ()=>{
             if(!this.#msalClient) throw new UnrecoverableError('Trying to login without an application registration');
 
+            log('verbose', 'Acquiring Graph access token');
             const res = await this.#msalClient.acquireTokenByClientCredential({
                 scopes: ['https://graph.microsoft.com/.default'],
             });
+            log('verbose', 'Acquired Graph access token');
             return res?.accessToken!;
         });
     }

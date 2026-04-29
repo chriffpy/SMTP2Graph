@@ -1,3 +1,10 @@
+/*
+ * Modifications (C) 2026 Sharpflix GmbH, Solingen, Germany.
+ * This file is part of the better-smtp2graph fork of SMTP2Graph.
+ * Distributed under GPL-3.0 (inherited from upstream).  No warranty;
+ * see the LICENSE file (sections 15-17) for the full disclaimer.
+ */
+
 import fs from 'fs';
 import readline from 'readline';
 import { Mutex, Semaphore } from 'async-mutex';

@@ -8,6 +8,8 @@
 >
 > Tags follow the pattern `v<upstream>-bsg.<n>` — current tag is `v1.1.4-bsg.2`. The Docker image built from this source is published as [`ghcr.io/chriffpy/better-smtp2graph`](https://github.com/chriffpy/better-smtp2graph). All changes are GPL-3.0, inherited from upstream.
 >
+> **Disclaimer / Warranty.** This fork is provided **AS IS, WITHOUT WARRANTY OF ANY KIND**, express or implied. To the maximum extent permitted by applicable law, the maintainers (Sharpflix GmbH) shall not be liable for any damages arising from the use or inability to use this software. See the LICENSE file (GPL-3.0, sections 15–17) for the full warranty disclaimer and limitation of liability. Use in production at your own risk.
+>
 > ---
 
 > SMTP2Graph is a robust, versatile and lightweight multiplatform application that will run an SMTP server which relays messages over Microsoft 365/Exchange Online using the Microsoft Graph API.
